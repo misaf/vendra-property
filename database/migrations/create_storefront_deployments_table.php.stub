@@ -1,0 +1,42 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        Schema::create('storefront_deployments', function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('tenant_id')->unique()->constrained()->cascadeOnDelete();
+            $table->string('slug')->unique();
+            $table->string('domain')->unique();
+            $table->string('theme');
+            $table->json('configuration');
+
+            // What the platform last observed.
+            $table->string('status')->index();
+
+            // What the platform intends, so a deliberately stopped storefront is
+            // not restarted by the next reconciliation pass.
+            $table->string('desired_state')->default('running')->index();
+
+            $table->string('container_name')->nullable();
+            $table->string('image')->nullable();
+            $table->string('image_digest')->nullable();
+            $table->timestampTz('requested_at')->nullable();
+            $table->timestampTz('deployed_at')->nullable();
+            $table->timestampTz('failed_at')->nullable();
+            $table->text('error')->nullable();
+            $table->timestampsTz();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('storefront_deployments');
+    }
+};
